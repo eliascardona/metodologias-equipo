@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { PetsCarousel } from "@/components/adoption/carousel";
 
 export default function AdoptionForm() {
   //   <section className="space-y-4">
@@ -35,6 +36,11 @@ export default function AdoptionForm() {
         </CardHeader>
 
         <CardContent className="space-y-6 text-sm">
+          {/* Sección 1 */}
+          <div className="w-full grid">
+            <PetsCarousel />
+          </div>
+
           {/* Sección 1 */}
           <section className="space-y-4">
             <h3 className="font-semibold text-gray-800">Sección 1: Datos del Solicitante</h3>
