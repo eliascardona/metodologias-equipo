@@ -1,47 +1,97 @@
 "use client"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import Image from "next/image"
 import { ScrollArea, ScrollBar } from "../ui/scroll-area"
+import { animalsAPI } from "@/lib/api"
+import { Animal } from "@/lib/types"
+import { Skeleton } from "../ui/skeleton"
 
-export interface Mascota {
-  nombre: string
-  foto: string
+interface PetsCarouselProps {
+  onSelectAnimal?: (animal: Animal | null) => void;
 }
 
-export function PetsCarousel() {
-  const mascotas: Mascota[] = [
-    { nombre: "Firulais", foto: "images/perro1.jpeg" },
-    { nombre: "Michi",    foto: "images/gato1.png" },
-    { nombre: "Rocky",    foto: "images/perro2.jpeg" },
-    { nombre: "Tupu",     foto: "images/gato2.jpeg" },
-  ]
+export function PetsCarousel({ onSelectAnimal }: PetsCarouselProps) {
+  const [animales, setAnimales] = useState<Animal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [seleccionadaId, setSeleccionadaId] = useState<number | null>(null)
 
-  const [seleccionada, setSeleccionada] = useState<string | null>(null)
+  useEffect(() => {
+    const fetchAnimales = async () => {
+      try {
+        setLoading(true)
+        const data = await animalsAPI.getAvailable()
+        setAnimales(data)
+      } catch (err) {
+        console.error('Error al cargar animales:', err)
+        setError('No se pudieron cargar los animales disponibles')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const seleccionar = useCallback((nombre: string) => {
-    setSeleccionada(nombre)
-    // Aquí podrías hacer algo con la selección (p.ej. console.log o llamar a un callback)
-    // console.log("Mascota seleccionada:", nombre)
+    fetchAnimales()
   }, [])
+
+  const seleccionar = useCallback((animal: Animal) => {
+    setSeleccionadaId(animal.id)
+    onSelectAnimal?.(animal)
+  }, [onSelectAnimal])
+
+  if (loading) {
+    return (
+      <ScrollArea className="w-156 justify-self-center whitespace-nowrap">
+        <div className="flex w-max space-x-4 p-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="shrink-0 space-y-2">
+              <Skeleton className="w-[300px] h-[400px] rounded-md" />
+              <Skeleton className="h-4 w-[200px] mx-auto" />
+            </div>
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="w-full p-4 text-center text-red-600">
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  if (animales.length === 0) {
+    return (
+      <div className="w-full p-4 text-center text-gray-600">
+        <p>No hay animales disponibles para adopción en este momento.</p>
+      </div>
+    )
+  }
 
   return (
     <ScrollArea className="w-156 justify-self-center whitespace-nowrap">
       <div className="flex w-max space-x-4 p-4">
-        {mascotas.map((mascota) => {
-          const isActive = seleccionada === mascota.nombre
+        {animales.map((animal) => {
+          const isActive = seleccionadaId === animal.id
+          const imageSrc = animal.foto
+            ? `http://localhost:8000${animal.foto}`
+            : '/images/placeholder-animal.jpg'
+
           return (
-            <figure key={mascota.nombre} className="shrink-0">
+            <figure key={animal.id} className="shrink-0">
               <button
                 type="button"
-                onClick={() => seleccionar(mascota.nombre)}
+                onClick={() => seleccionar(animal)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
-                    seleccionar(mascota.nombre)
+                    seleccionar(animal)
                   }
                 }}
                 aria-pressed={isActive}
-                aria-label={`Seleccionar a ${mascota.nombre}`}
+                aria-label={`Seleccionar a ${animal.nombre}`}
                 className={[
                   "overflow-hidden rounded-md w-[300px] h-[400px]",
                   "transition-transform duration-200 outline-none",
@@ -49,21 +99,24 @@ export function PetsCarousel() {
                 ].join(" ")}
               >
                 <Image
-                  src={mascota.foto}
-                  alt={`Imagen de ${mascota.nombre}`}
+                  src={imageSrc}
+                  alt={`Imagen de ${animal.nombre}`}
                   width={300}
                   height={400}
                   className="w-full h-full object-cover"
+                  unoptimized
                 />
               </button>
 
-              <figcaption className="text-muted-foreground pt-2 text-xs text-center">
-                Nombre{": "}
-                <span className="text-foreground font-semibold">
-                  {mascota.nombre}
-                </span>
+              <figcaption className="text-muted-foreground pt-2 text-xs text-center max-w-[300px]">
+                <div className="font-semibold text-foreground text-sm mb-1">
+                  {animal.nombre}
+                </div>
+                <div className="text-[10px]">
+                  {animal.especie.charAt(0).toUpperCase() + animal.especie.slice(1)} • {animal.raza} • {animal.edad} {animal.edad === 1 ? 'año' : 'años'}
+                </div>
                 {isActive && (
-                  <span className="ml-2 inline-block rounded px-2 py-0.5 text-[10px] font-medium bg-indigo-50 text-indigo-700">
+                  <span className="mt-2 inline-block rounded px-2 py-0.5 text-[10px] font-medium bg-indigo-50 text-indigo-700">
                     Seleccionada
                   </span>
                 )}

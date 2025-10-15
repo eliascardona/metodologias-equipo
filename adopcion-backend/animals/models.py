@@ -66,14 +66,18 @@ class Animal(BaseCustomID):
     raza = models.CharField(max_length=100, verbose_name="Raza")
     lugar_rescate = models.CharField(
         max_length=200,
+        blank=True,
+        null=True,
         verbose_name="Lugar de Rescate"
     )
     fecha_rescate = models.DateField(
-        default=timezone.now,
+        blank=True,
+        null=True,
         verbose_name="Fecha de Rescate"
     )
     descripcion_medica = models.TextField(
         blank=True,
+        null=True,
         verbose_name="Descripción Médica",
         help_text="Estado de salud, vacunas, tratamientos, etc."
     )
