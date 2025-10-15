@@ -1,51 +1,78 @@
+"use client"
+import { useState, useCallback } from "react"
 import Image from "next/image"
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area"
 
-export interface Artwork {
-    artist: string
-    art: string
+export interface Mascota {
+  nombre: string
+  foto: string
 }
 
-export const works: Artwork[] = [
-    {
-        artist: "Ornella Binni",
-        art: "https://images.unsplash.com/photo-1465869185982-5a1a7522cbcb?auto=format&fit=crop&w=300&q=80",
-    },
-    {
-        artist: "Tom Byrom",
-        art: "https://images.unsplash.com/photo-1548516173-3cabfa4607e9?auto=format&fit=crop&w=300&q=80",
-    },
-    {
-        artist: "Vladimir Malyavko",
-        art: "https://images.unsplash.com/photo-1494337480532-3725c85fd2ab?auto=format&fit=crop&w=300&q=80",
-    },
-]
-
 export function PetsCarousel() {
-    return (
-        <ScrollArea className="w-156 justify-self-center whitespace-nowrap">
-            <div className="flex w-max space-x-4 p-4">
-                {works.map((artwork) => (
-                    <figure key={artwork.artist} className="shrink-0">
-                        <div className="overflow-hidden rounded-md">
-                            <Image
-                                src={artwork.art}
-                                alt={`Pet's image by ${artwork.artist}`}
-                                className="aspect-[3/4] h-fit w-fit object-cover"
-                                width={300}
-                                height={400}
-                            />
-                        </div>
-                        <figcaption className="text-muted-foreground pt-2 text-xs">
-                            Nombre{": "}
-                            <span className="text-foreground font-semibold">
-                                {artwork.artist}
-                            </span>
-                        </figcaption>
-                    </figure>
-                ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-    )
+  const mascotas: Mascota[] = [
+    { nombre: "Firulais", foto: "images/perro1.jpeg" },
+    { nombre: "Michi",    foto: "images/gato1.png" },
+    { nombre: "Rocky",    foto: "images/perro2.jpeg" },
+    { nombre: "Tupu",     foto: "images/gato2.jpeg" },
+  ]
+
+  const [seleccionada, setSeleccionada] = useState<string | null>(null)
+
+  const seleccionar = useCallback((nombre: string) => {
+    setSeleccionada(nombre)
+    // Aquí podrías hacer algo con la selección (p.ej. console.log o llamar a un callback)
+    // console.log("Mascota seleccionada:", nombre)
+  }, [])
+
+  return (
+    <ScrollArea className="w-156 justify-self-center whitespace-nowrap">
+      <div className="flex w-max space-x-4 p-4">
+        {mascotas.map((mascota) => {
+          const isActive = seleccionada === mascota.nombre
+          return (
+            <figure key={mascota.nombre} className="shrink-0">
+              <button
+                type="button"
+                onClick={() => seleccionar(mascota.nombre)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    seleccionar(mascota.nombre)
+                  }
+                }}
+                aria-pressed={isActive}
+                aria-label={`Seleccionar a ${mascota.nombre}`}
+                className={[
+                  "overflow-hidden rounded-md w-[300px] h-[400px]",
+                  "transition-transform duration-200 outline-none",
+                  isActive ? "ring-2 ring-indigo-500 ring-offset-2 scale-[1.02]" : "hover:scale-[1.01] focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+                ].join(" ")}
+              >
+                <Image
+                  src={mascota.foto}
+                  alt={`Imagen de ${mascota.nombre}`}
+                  width={300}
+                  height={400}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+
+              <figcaption className="text-muted-foreground pt-2 text-xs text-center">
+                Nombre{": "}
+                <span className="text-foreground font-semibold">
+                  {mascota.nombre}
+                </span>
+                {isActive && (
+                  <span className="ml-2 inline-block rounded px-2 py-0.5 text-[10px] font-medium bg-indigo-50 text-indigo-700">
+                    Seleccionada
+                  </span>
+                )}
+              </figcaption>
+            </figure>
+          )
+        })}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
+  )
 }
